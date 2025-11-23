@@ -78,7 +78,7 @@ func TestInt64Counter_Add(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "Counter")
+	metric := findMetric(rm, "counter")
 	require.NotNil(t, metric, "Counter metric not found")
 
 	sum, ok := metric.Data.(metricdata.Sum[int64])
@@ -96,7 +96,7 @@ func TestFloat64Counter_Add(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "FloatCounter")
+	metric := findMetric(rm, "float_counter")
 	require.NotNil(t, metric, "FloatCounter metric not found")
 
 	sum, ok := metric.Data.(metricdata.Sum[float64])
@@ -114,7 +114,7 @@ func TestInt64UpDownCounter_Add(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "UpDown")
+	metric := findMetric(rm, "up_down")
 	require.NotNil(t, metric, "UpDown metric not found")
 }
 
@@ -128,7 +128,7 @@ func TestFloat64UpDownCounter_Add(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "FloatUpDown")
+	metric := findMetric(rm, "float_up_down")
 	require.NotNil(t, metric, "FloatUpDown metric not found")
 }
 
@@ -141,7 +141,7 @@ func TestInt64Gauge_Record(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "Gauge")
+	metric := findMetric(rm, "gauge")
 	require.NotNil(t, metric, "Gauge metric not found")
 }
 
@@ -154,7 +154,7 @@ func TestFloat64Gauge_Record(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "FloatGauge")
+	metric := findMetric(rm, "float_gauge")
 	require.NotNil(t, metric, "FloatGauge metric not found")
 }
 
@@ -169,7 +169,7 @@ func TestInt64Histogram_Record(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "Histogram")
+	metric := findMetric(rm, "histogram")
 	require.NotNil(t, metric, "Histogram metric not found")
 
 	hist, ok := metric.Data.(metricdata.Histogram[int64])
@@ -187,7 +187,7 @@ func TestFloat64Histogram_Record(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	metric := findMetric(rm, "FloatHistogram")
+	metric := findMetric(rm, "float_histogram")
 	require.NotNil(t, metric, "FloatHistogram metric not found")
 
 	hist, ok := metric.Data.(metricdata.Histogram[float64])
@@ -263,7 +263,7 @@ func TestAttributes(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "Counter")
+	foundMetric := findMetric(rm, "counter")
 	require.NotNil(t, foundMetric, "Counter metric not found")
 
 	sum := foundMetric.Data.(metricdata.Sum[int64])
@@ -286,7 +286,7 @@ func TestInt64ObservableCounter_RegisterCallback(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "ObservableCounter")
+	foundMetric := findMetric(rm, "observable_counter")
 	require.NotNil(t, foundMetric, "ObservableCounter metric not found")
 
 	sum, ok := foundMetric.Data.(metricdata.Sum[int64])
@@ -308,7 +308,7 @@ func TestFloat64ObservableCounter_RegisterCallback(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "ObservableFloatCounter")
+	foundMetric := findMetric(rm, "observable_float_counter")
 	require.NotNil(t, foundMetric, "ObservableFloatCounter metric not found")
 
 	sum, ok := foundMetric.Data.(metricdata.Sum[float64])
@@ -330,7 +330,7 @@ func TestInt64ObservableGauge_RegisterCallback(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "ObservableGauge")
+	foundMetric := findMetric(rm, "observable_gauge")
 	require.NotNil(t, foundMetric, "ObservableGauge metric not found")
 
 	gauge, ok := foundMetric.Data.(metricdata.Gauge[int64])
@@ -352,7 +352,7 @@ func TestFloat64ObservableGauge_RegisterCallback(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "ObservableFloatGauge")
+	foundMetric := findMetric(rm, "observable_float_gauge")
 	require.NotNil(t, foundMetric, "ObservableFloatGauge metric not found")
 
 	gauge, ok := foundMetric.Data.(metricdata.Gauge[float64])
@@ -374,7 +374,7 @@ func TestInt64ObservableUpDownCounter_RegisterCallback(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "ObservableUpDown")
+	foundMetric := findMetric(rm, "observable_up_down")
 	require.NotNil(t, foundMetric, "ObservableUpDown metric not found")
 
 	sum, ok := foundMetric.Data.(metricdata.Sum[int64])
@@ -396,7 +396,7 @@ func TestFloat64ObservableUpDownCounter_RegisterCallback(t *testing.T) {
 	rm := metricdata.ResourceMetrics{}
 	require.NoError(t, reader.Collect(ctx, &rm))
 
-	foundMetric := findMetric(rm, "ObservableFloatUpDown")
+	foundMetric := findMetric(rm, "observable_float_up_down")
 	require.NotNil(t, foundMetric, "ObservableFloatUpDown metric not found")
 
 	sum, ok := foundMetric.Data.(metricdata.Sum[float64])
