@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/tinybluerobots/gotel/attribute"
 	otelattribute "go.opentelemetry.io/otel/attribute"
@@ -16,6 +17,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.32.0"
+	"unicode"
 )
 
 var metricsInstance any
@@ -297,6 +299,26 @@ func newInstrument[T any, U any](name string, newInstrument func(string, ...U) (
 	return c, nil
 }
 
+func toSnakeCase(str string) string {
+	runes := []rune(str)
+	sb := strings.Builder{}
+
+	for i, r := range runes {
+		if i > 0 && unicode.IsUpper(r) {
+			prev := runes[i-1]
+			hasNext := i+1 < len(runes)
+			// Add underscore if previous char is lowercase, or if next char is lowercase (end of acronym)
+			if unicode.IsLower(prev) || (hasNext && unicode.IsLower(runes[i+1])) {
+				_, _ = sb.WriteRune('_')
+			}
+		}
+
+		_, _ = sb.WriteRune(unicode.ToLower(r))
+	}
+
+	return sb.String()
+}
+
 func initMetricFields(meter metric.Meter, m any) error {
 	if m == nil || reflect.ValueOf(m).IsNil() {
 		return nil
@@ -309,6 +331,8 @@ func initMetricFields(meter metric.Meter, m any) error {
 		field := v.Field(i)
 
 		fieldName := v.Type().Field(i).Name
+		fieldName = toSnakeCase(fieldName)
+
 		switch field.Type() {
 		case reflect.TypeOf(&Int64Counter{}):
 			inst, err := newInstrument(fieldName, meter.Int64Counter)
