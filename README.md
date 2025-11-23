@@ -15,6 +15,7 @@ package main
 
 import (
     "context"
+    "os"
 
     "github.com/tinybluerobots/gotel/attribute"
     "github.com/tinybluerobots/gotel/log"
@@ -33,8 +34,14 @@ func main() {
     // Create resource attributes
     resourceAttrs := attribute.ResourceAttributes("myservice", "1.0.0", "production", "myhost")
 
+    // Create a JSON log handler for stdout logging
+    logHandler, err := log.NewJSONHandler(os.Stdout, resourceAttrs, "INFO")
+    if err != nil {
+        panic(err)
+    }
+
     // Initialize all telemetry (tracing, metrics, logging)
-    shutdown, err := otel.Init(ctx, "myservice", resourceAttrs, &AppMetrics{})
+    shutdown, err := otel.Init(ctx, "myservice", resourceAttrs, &AppMetrics{}, logHandler)
     if err != nil {
         panic(err)
     }
@@ -75,14 +82,10 @@ Exporters are only created when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
 Initialize all telemetry components (tracing, metrics, logging) with a single call.
 
 ```go
-func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attribute.Attr, m *T, opts ...Option) (func(context.Context) error, error)
+func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attribute.Attr, metricsStruct *T, logHandler slog.Handler) (func(context.Context) error, error)
 ```
 
-Options:
-```go
-otel.WithLogWriter(w io.Writer)  // Default: os.Stdout
-otel.WithLogLevel(level string)  // Default: "INFO"
-```
+Pass a `slog.Handler` to enable local logging (use `log.NewJSONHandler`), or `nil` to log only to the OTEL collector.
 
 ### Tracing
 
@@ -209,7 +212,7 @@ m.ActiveUsers.Record(ctx, 42)
 
 #### NewJSONHandler
 
-Create a JSON slog handler with resource attributes baked in.
+Create a JSON slog handler with resource attributes baked in. Pass this to `otel.Init` via `otel.WithLogHandler` to enable logging.
 
 ```go
 func NewJSONHandler(w io.Writer, resourceAttrs []attribute.Attr, logLevel string) (slog.Handler, error)
@@ -263,6 +266,7 @@ package main
 import (
     "context"
     "errors"
+    "os"
 
     "github.com/tinybluerobots/gotel/attribute"
     "github.com/tinybluerobots/gotel/log"
@@ -282,8 +286,14 @@ func main() {
     // Create resource attributes
     resourceAttrs := attribute.ResourceAttributes("myapp", "1.0.0", "production", "myhost")
 
+    // Create a JSON log handler
+    logHandler, err := log.NewJSONHandler(os.Stdout, resourceAttrs, "INFO")
+    if err != nil {
+        panic(err)
+    }
+
     // Initialize all telemetry
-    shutdown, err := otel.Init(ctx, "myapp", resourceAttrs, &AppMetrics{})
+    shutdown, err := otel.Init(ctx, "myapp", resourceAttrs, &AppMetrics{}, logHandler)
     if err != nil {
         panic(err)
     }

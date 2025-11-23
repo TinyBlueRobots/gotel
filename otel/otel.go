@@ -4,8 +4,7 @@ package otel
 
 import (
 	"context"
-	"io"
-	"os"
+	"log/slog"
 
 	"github.com/tinybluerobots/gotel/attribute"
 	"github.com/tinybluerobots/gotel/log"
@@ -13,41 +12,10 @@ import (
 	"github.com/tinybluerobots/gotel/tracing"
 )
 
-type options struct {
-	logWriter io.Writer
-	logLevel  string
-}
-
-// Option configures the Init function.
-type Option func(*options)
-
-// WithLogWriter sets the io.Writer for log output. Default is os.Stdout.
-func WithLogWriter(w io.Writer) Option {
-	return func(o *options) {
-		o.logWriter = w
-	}
-}
-
-// WithLogLevel sets the log level. Default is "INFO".
-// Valid levels: DEBUG, INFO, WARN, ERROR.
-func WithLogLevel(level string) Option {
-	return func(o *options) {
-		o.logLevel = level
-	}
-}
-
 // Init initializes all telemetry components (tracing, metrics, logging) with a single call.
 // Returns a shutdown function that gracefully closes all providers.
-func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attribute.Attr, metricsStruct *T, opts ...Option) (func(context.Context) error, error) {
-	o := &options{
-		logWriter: os.Stdout,
-		logLevel:  "INFO",
-	}
-
-	for _, opt := range opts {
-		opt(o)
-	}
-
+// Pass a slog.Handler to enable local logging, or nil to log only to the OTEL collector.
+func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attribute.Attr, metricsStruct *T, logHandler slog.Handler) (func(context.Context) error, error) {
 	shutdownTracing, err := tracing.InitTracing(ctx, serviceName, resourceAttrs)
 	if err != nil {
 		return nil, err
@@ -59,15 +27,13 @@ func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attrib
 		return nil, err
 	}
 
-	logHandler, err := log.NewJSONHandler(o.logWriter, resourceAttrs, o.logLevel)
-	if err != nil {
-		_ = shutdownMetrics(ctx)
-		_ = shutdownTracing(ctx)
-
-		return nil, err
+	var shutdownLogger func(context.Context) error
+	if logHandler != nil {
+		shutdownLogger, err = log.InitLogger(ctx, resourceAttrs, logHandler)
+	} else {
+		shutdownLogger, err = log.InitLogger(ctx, resourceAttrs)
 	}
 
-	shutdownLogger, err := log.InitLogger(ctx, resourceAttrs, logHandler)
 	if err != nil {
 		_ = shutdownMetrics(ctx)
 		_ = shutdownTracing(ctx)
@@ -76,10 +42,7 @@ func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attrib
 	}
 
 	shutdown := func(ctx context.Context) error {
-		var firstErr error
-		if err := shutdownLogger(ctx); err != nil && firstErr == nil {
-			firstErr = err
-		}
+		firstErr := shutdownLogger(ctx)
 
 		if err := shutdownMetrics(ctx); err != nil && firstErr == nil {
 			firstErr = err
