@@ -17,10 +17,10 @@ import (
     "context"
     "os"
 
+    "github.com/tinybluerobots/gotel"
     "github.com/tinybluerobots/gotel/attribute"
     "github.com/tinybluerobots/gotel/log"
     "github.com/tinybluerobots/gotel/metrics"
-    "github.com/tinybluerobots/gotel/otel"
     "github.com/tinybluerobots/gotel/tracing"
 )
 
@@ -41,7 +41,7 @@ func main() {
     }
 
     // Initialize all telemetry (tracing, metrics, logging)
-    shutdown, err := otel.Init(ctx, "myservice", resourceAttrs, &AppMetrics{}, logHandler)
+    shutdown, err := gotel.Init(ctx, "myservice", resourceAttrs, &AppMetrics{}, logHandler)
     if err != nil {
         panic(err)
     }
@@ -86,6 +86,12 @@ func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attrib
 ```
 
 Pass a `slog.Handler` to enable local logging (use `log.NewJSONHandler`), or `nil` to log only to the OTEL collector.
+
+```go
+import "github.com/tinybluerobots/gotel"
+
+shutdown, err := gotel.Init(ctx, "myservice", resourceAttrs, &AppMetrics{}, logHandler)
+```
 
 ### Tracing
 
@@ -268,10 +274,10 @@ import (
     "errors"
     "os"
 
+    "github.com/tinybluerobots/gotel"
     "github.com/tinybluerobots/gotel/attribute"
     "github.com/tinybluerobots/gotel/log"
     "github.com/tinybluerobots/gotel/metrics"
-    "github.com/tinybluerobots/gotel/otel"
     "github.com/tinybluerobots/gotel/tracing"
 )
 
@@ -293,7 +299,7 @@ func main() {
     }
 
     // Initialize all telemetry
-    shutdown, err := otel.Init(ctx, "myapp", resourceAttrs, &AppMetrics{}, logHandler)
+    shutdown, err := gotel.Init(ctx, "myapp", resourceAttrs, &AppMetrics{}, logHandler)
     if err != nil {
         panic(err)
     }

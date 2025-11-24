@@ -1,6 +1,6 @@
-// Package otel provides a unified initialization for all OpenTelemetry components.
+// Package gotel provides a unified initialization for all OpenTelemetry components.
 // It simplifies setup by initializing tracing, metrics, and logging with a single call.
-package otel
+package gotel
 
 import (
 	"context"
