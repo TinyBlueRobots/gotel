@@ -5,6 +5,7 @@ package tracing
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/tinybluerobots/gotel/attribute"
 	"go.opentelemetry.io/otel"
@@ -167,7 +168,16 @@ func NewSpan(ctx context.Context, name string, attrs ...attribute.Attr) (context
 }
 
 // NewChildSpan creates a child span from propagated trace context headers.
-func NewChildSpan(ctx context.Context, carrier map[string]string, name string, attrs ...attribute.Attr) (context.Context, Span) {
-	ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(carrier))
+func NewChildSpan(ctx context.Context, carrier map[string]string,
+	name string, attrs ...attribute.Attr) (context.Context, Span) {
+	// Normalize keys to lowercase for W3C Trace Context compatibility
+	// (Go's http.Header canonicalizes to "Traceparent" but propagators expect "traceparent")
+	normalized := make(map[string]string, len(carrier))
+	for k, v := range carrier {
+		normalized[strings.ToLower(k)] = v
+	}
+
+	ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(normalized))
+
 	return newSpan(ctx, name, attrs...)
 }
