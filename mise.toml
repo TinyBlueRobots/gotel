@@ -1,4 +1,5 @@
 [tools]
+go = "latest"
 golangci-lint = "latest"
 gotestsum = "latest"
 
@@ -7,3 +8,9 @@ run = "go fmt ./... && golangci-lint run --fix ./..."
 
 [tasks.test]
 run = "gotestsum"
+
+[tasks.tidy]
+run = """
+go get -u ./...
+go mod tidy
+"""
