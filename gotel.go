@@ -4,6 +4,8 @@ package gotel
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/tinybluerobots/gotel/attribute"
@@ -18,13 +20,13 @@ import (
 func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attribute.Attr, metricsStruct *T, logHandler slog.Handler) (func(context.Context) error, error) {
 	shutdownTracing, err := tracing.InitTracing(ctx, serviceName, resourceAttrs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize tracing: %w", err)
 	}
 
 	shutdownMetrics, err := metrics.InitMetrics(ctx, serviceName, resourceAttrs, metricsStruct)
 	if err != nil {
-		_ = shutdownTracing(ctx)
-		return nil, err
+		shutdownErr := shutdownTracing(ctx)
+		return nil, errors.Join(fmt.Errorf("failed to initialize metrics: %w", err), shutdownErr)
 	}
 
 	var shutdownLogger func(context.Context) error
@@ -35,24 +37,16 @@ func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attrib
 	}
 
 	if err != nil {
-		_ = shutdownMetrics(ctx)
-		_ = shutdownTracing(ctx)
-
-		return nil, err
+		metricsErr := shutdownMetrics(ctx)
+		tracingErr := shutdownTracing(ctx)
+		return nil, errors.Join(fmt.Errorf("failed to initialize logger: %w", err), metricsErr, tracingErr)
 	}
 
 	shutdown := func(ctx context.Context) error {
-		firstErr := shutdownLogger(ctx)
-
-		if err := shutdownMetrics(ctx); err != nil && firstErr == nil {
-			firstErr = err
-		}
-
-		if err := shutdownTracing(ctx); err != nil && firstErr == nil {
-			firstErr = err
-		}
-
-		return firstErr
+		loggerErr := shutdownLogger(ctx)
+		metricsErr := shutdownMetrics(ctx)
+		tracingErr := shutdownTracing(ctx)
+		return errors.Join(loggerErr, metricsErr, tracingErr)
 	}
 
 	return shutdown, nil
