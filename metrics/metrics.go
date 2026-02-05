@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/tinybluerobots/gotel/attribute"
 	otelattribute "go.opentelemetry.io/otel/attribute"
@@ -17,7 +18,6 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.32.0"
-	"unicode"
 )
 
 var metricsInstance any
@@ -478,7 +478,7 @@ func InitMetrics[T any](ctx context.Context, serviceName string, resourceAttrs [
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create metric exporter: %w", err)
 		}
 
 		options = append(options, sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exporter)))
@@ -489,7 +489,7 @@ func InitMetrics[T any](ctx context.Context, serviceName string, resourceAttrs [
 	meter := provider.Meter(serviceName)
 
 	if err := initMetricFields(meter, metricsStruct); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize metric fields: %w", err)
 	}
 
 	return provider.Shutdown, nil

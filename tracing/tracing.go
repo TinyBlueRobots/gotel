@@ -4,6 +4,7 @@ package tracing
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -129,7 +130,7 @@ func InitTracing(ctx context.Context, serviceName string, resourceAttrs []attrib
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 		}
 
 		options = append(options, sdktrace.WithBatcher(exporter))
