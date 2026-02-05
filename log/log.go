@@ -4,6 +4,7 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -69,7 +70,7 @@ func newHttpLogger(ctx context.Context, insecure bool, resourceAttrs []attribute
 
 	exp, err := otlploghttp.New(ctx, options...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create HTTP log exporter: %w", err)
 	}
 
 	processor := log.NewBatchProcessor(exp)
@@ -87,7 +88,7 @@ func newGrpcLogger(ctx context.Context, insecure bool, resourceAttrs []attribute
 
 	exp, err := otlploggrpc.New(ctx, options...)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create gRPC log exporter: %w", err)
 	}
 
 	processor := log.NewBatchProcessor(exp)
@@ -112,7 +113,7 @@ func grpcLogHandler(ctx context.Context, resourceAttrs []attribute.Attr) (slog.H
 	}
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to create log provider: %w", err)
 	}
 
 	return otelslog.NewHandler("otelslog", otelslog.WithLoggerProvider(provider)), provider, nil
@@ -130,7 +131,7 @@ func InitLogger(ctx context.Context, resourceAttrs []attribute.Attr, handler ...
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" {
 		otelHandler, loggerProvider, err := grpcLogHandler(ctx, resourceAttrs)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to initialize OTEL log handler: %w", err)
 		}
 
 		slogHandlers = append(slogHandlers, otelHandler)
@@ -165,6 +166,9 @@ func InitLogger(ctx context.Context, resourceAttrs []attribute.Attr, handler ...
 		writeLog(ctx, slogger.WarnContext, message, attributes...)
 	}
 	Error = func(ctx context.Context, err error, attributes ...attribute.Attr) {
+		if err == nil {
+			return
+		}
 		stackTrace := debug.Stack()
 		attributes = append(attributes, attribute.New("stack_trace", string(stackTrace)))
 		writeLog(ctx, slogger.ErrorContext, err.Error(), attributes...)
