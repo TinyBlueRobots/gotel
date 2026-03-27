@@ -39,7 +39,9 @@ type Span struct {
 	traceSpan trace.Span
 }
 
-// AddEvent adds an event to the span with optional attributes.
+// Deprecated: AddEvent uses the Span Event API which is deprecated by OpenTelemetry.
+// Use log.Info or log.Debug with a context instead — log-based events are automatically
+// correlated with the active span via trace context.
 func (s *Span) AddEvent(name string, attrs ...attribute.Attr) {
 	otelAttrs := make([]otelattribute.KeyValue, len(attrs))
 	for i, attr := range attrs {
@@ -49,14 +51,23 @@ func (s *Span) AddEvent(name string, attrs ...attribute.Attr) {
 	s.traceSpan.AddEvent(name, trace.WithAttributes(otelAttrs...))
 }
 
-// RecordError records an error on the span without setting status.
+// Deprecated: RecordError uses the Span Event API which is deprecated by OpenTelemetry.
+// Use log.Error with a context instead — errors are automatically correlated with the
+// active span via trace context.
 func (s *Span) RecordError(err error) {
 	s.traceSpan.RecordError(err)
 }
 
-// RecordErrorAndSetStatus records an error and sets the span status to Error.
+// Deprecated: RecordErrorAndSetStatus uses the Span Event API which is deprecated by
+// OpenTelemetry. Use log.Error with a context for the error recording, and SetStatus
+// or SetError for the span status.
 func (s *Span) RecordErrorAndSetStatus(err error) {
 	s.RecordError(err)
+	s.traceSpan.SetStatus(codes.Error, err.Error())
+}
+
+// SetError sets the span status to Error with the error message as description.
+func (s *Span) SetError(err error) {
 	s.traceSpan.SetStatus(codes.Error, err.Error())
 }
 

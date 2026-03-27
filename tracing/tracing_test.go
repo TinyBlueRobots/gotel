@@ -96,6 +96,21 @@ func TestSpan_RecordErrorAndSetStatus(t *testing.T) {
 	assert.Equal(t, "Error", spans[0].Status.Code.String())
 }
 
+func TestSpan_SetError(t *testing.T) {
+	exporter := setupTestTracer(t)
+	ctx := t.Context()
+
+	_, span := NewSpan(ctx, "test-span")
+	testErr := assert.AnError
+	span.SetError(testErr)
+	span.End()
+
+	spans := exporter.GetSpans()
+	require.Len(t, spans, 1)
+	assert.Equal(t, "Error", spans[0].Status.Code.String())
+	assert.Equal(t, testErr.Error(), spans[0].Status.Description)
+}
+
 func TestSpan_SetStatus(t *testing.T) {
 	tests := []struct {
 		name                string
