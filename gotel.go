@@ -39,6 +39,7 @@ func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attrib
 	if err != nil {
 		metricsErr := shutdownMetrics(ctx)
 		tracingErr := shutdownTracing(ctx)
+
 		return nil, errors.Join(fmt.Errorf("failed to initialize logger: %w", err), metricsErr, tracingErr)
 	}
 
@@ -46,6 +47,7 @@ func Init[T any](ctx context.Context, serviceName string, resourceAttrs []attrib
 		loggerErr := shutdownLogger(ctx)
 		metricsErr := shutdownMetrics(ctx)
 		tracingErr := shutdownTracing(ctx)
+
 		return errors.Join(loggerErr, metricsErr, tracingErr)
 	}
 

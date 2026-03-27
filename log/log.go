@@ -10,7 +10,6 @@ import (
 	"os"
 	"runtime/debug"
 
-	slogmulti "github.com/samber/slog-multi"
 	"github.com/tinybluerobots/gotel/attribute"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
@@ -138,8 +137,8 @@ func InitLogger(ctx context.Context, resourceAttrs []attribute.Attr, handler ...
 		provider = loggerProvider
 	}
 
-	fanoutHandler := slogmulti.Fanout(slogHandlers...)
-	slogger := slog.New(fanoutHandler)
+	multiHandler := slog.NewMultiHandler(slogHandlers...)
+	slogger := slog.New(multiHandler)
 
 	writeLog := func(ctx context.Context, logF func(ctx context.Context, msg string, args ...any), message string, logAttributes ...attribute.Attr) {
 		slogAttrs := make([]any, 0)
@@ -169,6 +168,7 @@ func InitLogger(ctx context.Context, resourceAttrs []attribute.Attr, handler ...
 		if err == nil {
 			return
 		}
+
 		stackTrace := debug.Stack()
 		attributes = append(attributes, attribute.New("stack_trace", string(stackTrace)))
 		writeLog(ctx, slogger.ErrorContext, err.Error(), attributes...)
